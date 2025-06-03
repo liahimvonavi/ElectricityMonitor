@@ -24,8 +24,15 @@ class Relay_Manager:
 
     def click(self, xpath):
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+
     def write(self, xpath, keys):
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).send_keys(keys)
+        input_elem = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, xpath))
+        )
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, xpath))
+        )
+        input_elem.send_keys(keys)
     def wait_for_loading_mask(self, timeout=20):
         WebDriverWait(self.driver, timeout).until(
             EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
@@ -44,6 +51,7 @@ class Relay_Manager:
 
             main_window = self.driver.current_window_handle
             time.sleep(1)
+
             for row in reader:
                 url = row['URL']
                 inverter = row['INVERTOR']
