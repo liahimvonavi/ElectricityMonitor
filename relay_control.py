@@ -26,11 +26,14 @@ class Relay_Manager:
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
     def write(self, xpath, keys):
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).send_keys(keys)
+    def wait_for_loading_mask(self, timeout=20):
+        WebDriverWait(self.driver, timeout).until(
+            EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
     def relay_mode(self, mode):
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_experimental_option("detach", True)
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--window-size=1920,1080')
         self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.maximize_window()
         self.driver.get(url=self.url)
         self.write(xpath='//input[@placeholder="Input email or username"]', keys=os.getenv("CLOUD_ACC"))
         self.click(xpath='//span[@class="el-checkbox__inner"]')
@@ -53,6 +56,7 @@ class Relay_Manager:
 
                     self.click(xpath="//span[@class='el-tree-node__label' and text()='on/off']")
                     self.click(xpath='//input[@placeholder="Select" and contains(@class, "el-input__inner")]')
+                    self.wait_for_loading_mask()
                     if mode == "on":
                         self.click(xpath="//div[contains(@class, 'el-select-dropdown') and contains(@style, 'z-index')]//span[text()='ON']")
                     else:
@@ -60,6 +64,7 @@ class Relay_Manager:
                             xpath="//div[contains(@class, 'el-select-dropdown') and contains(@style, 'z-index')]//span[normalize-space(text())='OFF']")
                     print(f"Turned {mode} invertor {inverter}  ")
                     self.log_inverter_operation(inverter, mode)
+
 
                     #Add save option after testing
                     #self.click(xpath="//a[contains(@class, 'el-link') and contains(@class, 'el-link--primary')]/span[text()='Save']")

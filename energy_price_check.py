@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 threshold = 20
-driver = webdriver.Chrome()
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')  # <--- add this line!
+chrome_options.add_argument('--window-size=1920,1080')
+driver = webdriver.Chrome(options=chrome_options)
 driver.get(os.getenv('PRICES_URL'))
 
 time.sleep(5)
