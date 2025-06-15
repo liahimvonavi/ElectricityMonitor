@@ -41,7 +41,7 @@ class Relay_Manager:
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--window-size=1920,1080')
         self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.get(url=self.url)
+        self.driver.get(self.url)
         self.write(xpath='//input[@placeholder="Input email or username"]', keys=os.getenv("CLOUD_ACC"))
         self.click(xpath='//span[@class="el-checkbox__inner"]')
         self.write(xpath='//input[@placeholder="Input password"]', keys=os.getenv("CLOUD_PASS") + Keys.ENTER)
@@ -55,33 +55,32 @@ class Relay_Manager:
             for row in reader:
                 url = row['URL']
                 inverter = row['INVERTOR']
-                try:
-                    self.driver.execute_script("window.open('');")
-                    self.driver.switch_to.window(self.driver.window_handles[-1])
+                for attempt in range(3):
+                    try:
+                        self.driver.execute_script("window.open('');")
+                        self.driver.switch_to.window(self.driver.window_handles[-1])
 
-                    self.driver.get(url)
-                    time.sleep(1)  # Wait for page to load
+                        self.driver.get(url)
+                        time.sleep(1)
 
-                    self.click(xpath="//span[@class='el-tree-node__label' and text()='on/off']")
-                    self.click(xpath='//input[@placeholder="Select" and contains(@class, "el-input__inner")]')
-                    self.wait_for_loading_mask()
-                    if mode == "on":
-                        self.click(xpath="//div[contains(@class, 'el-select-dropdown') and contains(@style, 'z-index')]//span[text()='ON']")
-                    else:
-                        self.click(
-                            xpath="//div[contains(@class, 'el-select-dropdown') and contains(@style, 'z-index')]//span[normalize-space(text())='OFF']")
-                    print(f"Turned {mode} invertor {inverter}  ")
-                    self.log_inverter_operation(inverter, mode)
+                        self.click(xpath="//span[contains(@class, 'el-tree-node__label') and text()='Inverter Power Setting']")
+                        if mode == "on":
+                            self.write(xpath="//input[@type='text' and @placeholder='Input' and contains(@class, 'el-input__inner')]", keys="100")
+                        else:
+                            self.write(xpath="//input[@type='text' and @placeholder='Input' and contains(@class, 'el-input__inner')]", keys="5")
 
+                        self.wait_for_loading_mask()
+                        self.log_inverter_operation(inverter, mode)
+                        self.click(xpath="//a[contains(@class, 'el-link') and contains(@class, 'el-link--primary')]/span[text()='Save']")
+                        break
 
-                    #Add save option after testing
-                    #self.click(xpath="//a[contains(@class, 'el-link') and contains(@class, 'el-link--primary')]/span[text()='Save']")
-                except Exception as e:
-                    print(f"Failed to set inverter {inverter} to {mode}: {e}")
-                    self.log_inverter_operation(inverter, f"FAILED ({mode}): {e}")
+                    except Exception as e:
+                        print(f"Failed to set inverter {inverter} to {mode}: {e}")
+                        if attempt == 2:
+                            self.log_inverter_operation(inverter, f"Failed after 3 tries {mode}: {e}")
 
-                finally:
-                    self.driver.close()
-                    self.driver.switch_to.window(main_window)
+                    finally:
+                        self.driver.close()
+                        self.driver.switch_to.window(main_window)
 
         self.driver.quit()

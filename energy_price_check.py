@@ -1,5 +1,4 @@
 import os
-
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
@@ -8,7 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-threshold = 20
+
+threshold = 30
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--window-size=1920,1080')
@@ -47,12 +47,13 @@ for i in range(1, len(rows), 2):
 
 with open("relay_plan.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(['hour', 'state'])
+    writer.writerow(['hour', 'state', 'price'])
     for hour in sorted(hour_prices):
+        price = hour_prices[hour]
         if hour_prices[hour] < threshold:
             state = "off"
         else:
             state = "on"
-        writer.writerow([hour, state])
+        writer.writerow([hour, state, price])
         print(f"{hour}:00 - {hour + 1}:00 -> {hour_prices[hour]} BGN -> {state.upper()}")
     writer.writerow(['20', 'on'])
